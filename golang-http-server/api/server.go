@@ -49,12 +49,32 @@ func (s *Server) createShoppingItem() http.HandlerFunc {
 	}
 }
 
+// encodes shopping items and sends to user
 func (s *Server) listShoppingItems() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
+		// encode s.shoppingItems into response json
 		if err := json.NewEncoder(w).Encode(s.shoppingItems); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
+		}
+	}
+}
+
+// kinda creates a .pop() on shopping items
+func (s *Server) removeShoppingItem() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		idStr, _ := mux.Vars(r)["id"]
+		id, err := uuid.Parse(idStr)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		}
+
+		for i, item := range s.shoppingItems {
+			if item.ID == id {
+				s.shoppingItems = append(s.shoppingItems[:i], s.shoppingItems[i-1:]...)
+				break
+			}
 		}
 	}
 }
